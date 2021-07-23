@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+    db:
+        image: mysql:5.7.35
+        volumes:
+            - ./mysql:/docker-entrypoint-initdb.d
+        ports:
+            - 3306:3306
+        environment:
+            MYSQL_ROOT_PASSWORD: "root"
+            MYSQL_PASSWORD: "root"
+        networks:
+            - first-cluster
+        healthcheck:
+            test: mysqladmin ping -h localhost -u root --password=$$MYSQL_PASSWORD
+            timeout: 20s
+            retries: 10
+
+    app:
+        build:
+            context: ./app
+        image: app:1
+        ports:
+            - 80:5000
+        command: bash /wait-for.sh db:3306 -- python app.py
+        depends_on:
+            - db
+        networks:
+            - first-cluster
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:5000/healthy"]
+            interval: 20s
+            timeout: 2s
+            retries: 3
+            start_period: 5s
+            
+
+networks:
+    first-cluster:
+        driver: bridge
