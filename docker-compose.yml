@@ -5,6 +5,7 @@ services:
         image: mysql:5.7.35
         volumes:
             - ./mysql:/docker-entrypoint-initdb.d
+            - "nfsvolume:/var/lib/mysql"
         ports:
             - 3306:3306
         environment:
@@ -34,8 +35,16 @@ services:
             timeout: 2s
             retries: 3
             start_period: 5s
-            
+        restart: on-failure
 
 networks:
     first-cluster:
         driver: bridge
+
+volumes:
+    nfsvolume:
+        driver: local
+        driver_opts:
+            type: nfs
+            o: "addr=192.168.1.105,rw,nfsvers=4,sync"
+            device: ":/mnt/nfs_share/mysql"
