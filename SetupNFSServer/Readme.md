@@ -6,5 +6,7 @@ This script works on ubuntu distros.
 Please Run this script with root privileges:
 
 `sudo su`
+
 `chmod +x setup.sh`
+
 `./setup.sh`
