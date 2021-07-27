@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  node-exporter:
+    image: quay.io/prometheus/node-exporter:v1.2.0
+    container_name: node_exporter
+    command:
+      - '--path.rootfs=/host'
+    # network_mode: host
+    ports:
+      - '9100:9100'
+    pid: host
+    restart: unless-stopped
+    networks:
+      - monitoring
+    volumes:
+      - '/:/host:ro,rslave'
+
+  prometheus:
+    image: prom/prometheus:v2.28.1
+    container_name: prom-server
+    volumes:
+      - './prometheus/prometheus.yml:/etc/prometheus/prometheus.yml'
+    ports:
+      - '9090:9090'
+    # network_mode: host
+    networks:
+      - monitoring
+    depends_on:
+      - node-exporter
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:master
+    ports: 
+      - '3000:3000'
+    restart: always
+    networks:
+      - monitoring
+    depends_on:
+      - node-exporter
+      - prometheus
+    volumes:
+      - './prometheus/grafana/grafana.ini:/etc/grafana/grafana.ini'
+
+networks:
+  monitoring:
+    driver: bridge
